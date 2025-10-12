@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist # Make sure to import pdist
 
 # --- Helper Functions (No changes here) ---
 
@@ -29,15 +30,39 @@ def calculate_distribution_variance(positions):
     return np.var(distances)
 
 def objective_function(positions, area_dim, perception_radius, w1, w2, w3):
-    """The multi-objective fitness function from Equation (8) in the paper."""
+    """The multi-objective fitness function from Equation (8) with the missing constraint."""
     num_nodes = len(positions.flatten()) // 2
     nodes = positions.reshape(num_nodes, 2)
     
     r_cover = calculate_coverage(nodes, area_dim, perception_radius)
     d_var = calculate_distribution_variance(nodes)
-    e_total_penalty = d_var 
     
-    fitness = w1 * r_cover - w2 * d_var - w3 * e_total_penalty
+    # --- START: NEW PENALTY CODE ---
+    # This implements the missing constraint from the paper 
+    
+    # Define a minimum distance to enforce separation. 
+    # A fraction of the perception radius is a good starting point.
+    d_min = perception_radius / 2.0 
+    
+    penalty = 0.0
+    if num_nodes > 1:
+        # pdist calculates the pairwise distances between all nodes
+        distances = pdist(nodes)
+        
+        # Find all distances that are less than the minimum allowed distance
+        violating_distances = distances[distances < d_min]
+        
+        # Add a large penalty for each violation. 
+        # The penalty should be significant enough to guide the search.
+        # We penalize based on how close the nodes are.
+        if len(violating_distances) > 0:
+            penalty = np.sum(d_min - violating_distances) * 10 # Multiplier makes the penalty stronger
+
+    # --- END: NEW PENALTY CODE ---
+
+    # The final fitness now includes the penalty
+    # Note: penalty is subtracted because we are maximizing. A higher penalty lowers the fitness.
+    fitness = w1 * r_cover - w2 * d_var - penalty
     return fitness
 
 
