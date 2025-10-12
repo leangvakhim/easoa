@@ -41,7 +41,7 @@ def objective_function(positions, area_dim, perception_radius, w1, w2, w3):
     return fitness
 
 
-# --- FINAL CORRECTED EASOA Implementation ---
+# --- EASOA Implementation with Final Tuning ---
 
 class EASOA:
     def __init__(self, obj_func, num_sparrows, num_dimensions, max_iter, bounds, func_args):
@@ -52,10 +52,11 @@ class EASOA:
         self.bounds = np.array(bounds)
         self.func_args = func_args
         
-        # Parameters based on the paper and standard SSA conventions
+        # Parameters based on the paper [cite: 403] and standard SSA conventions
         self.producer_ratio = 0.2
         self.scout_ratio = 0.1
         self.elite_rate = 0.2
+        self.delta = 0.3 # Warning update coefficient from the paper [cite: 403]
         
         self.num_producers = int(self.num_sparrows * self.producer_ratio)
         
@@ -78,7 +79,7 @@ class EASOA:
             self.global_best_pos = self.positions[best_idx].copy()
             
     def _reverse_elite_selection(self):
-        # Implements Equations (3) and (4)
+        # Implements Equations (3) and (4) [cite: 138, 141]
         num_elites = int(self.num_sparrows * self.elite_rate)
         elite_indices = np.argsort(self.fitness)[-num_elites:]
         
@@ -86,7 +87,6 @@ class EASOA:
             current_pos = self.positions[idx]
             reverse_pos = self.bounds[1] + self.bounds[0] - current_pos
             self.positions[idx] = np.clip(reverse_pos, self.bounds[0], self.bounds[1])
-            self.fitness[idx] = self.obj_func(self.positions[idx], **self.func_args)
 
     def optimize(self):
         for t in tqdm(range(self.max_iter), desc="EASOA Optimization"):
@@ -94,47 +94,33 @@ class EASOA:
             sorted_indices = np.argsort(self.fitness)[::-1]
             
             # --- 1. Producer (Discoverer) Phase ---
-            # The best sparrows are producers. They explore the search space.
             for i in range(self.num_producers):
                 idx = sorted_indices[i]
                 r2 = np.random.rand()
-                if r2 < 0.8: # Extensive search
+                if r2 < 0.8:
                     self.positions[idx] += np.random.randn(self.num_dimensions)
-                else: # Move towards a safe zone (can be modeled as random walk)
+                else:
                     self.positions[idx] += np.random.normal(0, 1, self.num_dimensions)
-                self.positions[idx] = np.clip(self.positions[idx], self.bounds[0], self.bounds[1])
 
             # --- 2. Scrounger (Joiner) Phase ---
-            # The rest of the sparrows are scroungers. They follow the producers.
-            # This is where the Brightness-Driven Perturbation is applied.
             for i in range(self.num_producers, self.num_sparrows):
                 idx = sorted_indices[i]
-                
-                # Follow the best producer (sparrow at index 0 of sorted list)
                 best_producer_pos = self.positions[sorted_indices[0]]
                 
-                # Brightness-Driven Perturbation - Equation (5)
-                beta = 1.0 # Attraction coefficient
-                gamma = 0.5 # Attenuation coefficient (crucial to prevent clumping)
+                # Brightness-Driven Perturbation - Equation (5) [cite: 146]
+                beta = 0.5 # Perturbation coefficient from the paper [cite: 403]
+                gamma = 0.5 
                 distance_sq = np.sum((self.positions[idx] - best_producer_pos)**2)
-                attraction = beta * np.exp(-gamma * distance_sq / self.max_iter) * (best_producer_pos - self.positions[idx])
-                
+                attraction = beta * np.exp(-gamma * distance_sq) * (best_producer_pos - self.positions[idx])
                 self.positions[idx] += attraction
-                self.positions[idx] = np.clip(self.positions[idx], self.bounds[0], self.bounds[1])
 
             # --- 3. Scout Phase ---
-            # A small portion of sparrows become scouts to avoid local optima.
-            # This is where the Dynamic Warning Update is applied.
             num_scouts = int(self.num_sparrows * self.scout_ratio)
             scout_indices = np.random.choice(self.num_sparrows, num_scouts, replace=False)
             for idx in scout_indices:
-                if np.array_equal(self.positions[idx], self.global_best_pos):
-                    continue # Don't move the absolute best sparrow
-                    
-                # Dynamic Warning Update - Equation (7)
-                delta = 0.5 # Warning response coefficient
+                # Dynamic Warning Update - Equation (7) [cite: 166]
                 r = np.random.rand()
-                self.positions[idx] = self.global_best_pos + np.random.randn(self.num_dimensions) * np.abs(self.positions[idx] - self.global_best_pos)
+                self.positions[idx] += self.delta * (r * self.global_best_pos - self.positions[idx])
 
             # --- 4. Apply Reverse Elite Selection ---
             self._reverse_elite_selection()
@@ -151,7 +137,6 @@ class EASOA:
 
 
 def plot_results(positions, area_dim, perception_radius, fitness, curve):
-    # This plotting function remains the same
     num_nodes = len(positions)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
 
@@ -182,19 +167,21 @@ def plot_results(positions, area_dim, perception_radius, fitness, curve):
 
 # --- Main Execution ---
 if __name__ == '__main__':
-    # Simulation Parameters from the paper
+    # Simulation Parameters from the paper [cite: 390, 475]
     AREA_DIMENSION = 50
     NUM_NODES = 20
     PERCEPTION_RADIUS = 10
 
-    # Algorithm Parameters
+    # Algorithm Parameters [cite: 402]
     NUM_SPARROWS = 50
     MAX_ITERATIONS = 500
     NUM_DIMENSIONS = NUM_NODES * 2
     BOUNDS = [0, AREA_DIMENSION]
 
-    # Objective function weights from Equation (8)
-    W1, W2, W3 = 0.7, 0.2, 0.1
+    # --- CRITICAL CHANGE: Adjusting weights to prioritize uniform distribution ---
+    # Previous weights: W1=0.7 (coverage), W2=0.2 (uniformity)
+    # New weights prioritize uniformity to force nodes to spread out.
+    W1, W2, W3 = 0.4, 0.5, 0.1
 
     func_args = {
         'area_dim': AREA_DIMENSION,
