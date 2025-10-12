@@ -30,39 +30,35 @@ def calculate_distribution_variance(positions):
     return np.var(distances)
 
 def objective_function(positions, area_dim, perception_radius, w1, w2, w3):
-    """The multi-objective fitness function from Equation (8) with the missing constraint."""
+    """
+    The corrected multi-objective fitness function, focusing only on the relevant
+    goals for node placement: Coverage and Uniformity.
+    """
     num_nodes = len(positions.flatten()) // 2
     nodes = positions.reshape(num_nodes, 2)
     
-    r_cover = calculate_coverage(nodes, area_dim, perception_radius)
-    d_var = calculate_distribution_variance(nodes)
-    
-    # --- START: NEW PENALTY CODE ---
-    # This implements the missing constraint from the paper 
-    
-    # Define a minimum distance to enforce separation. 
-    # A fraction of the perception radius is a good starting point.
-    d_min = perception_radius / 2.0 
+    # --- Constraint 1: Node Separation (from the paper) ---
+    # We add a penalty if nodes are too close. This is the most critical part
+    # for forcing a uniform, grid-like distribution.
+    d_min = perception_radius / 1.5 # A slightly larger minimum distance
     
     penalty = 0.0
     if num_nodes > 1:
-        # pdist calculates the pairwise distances between all nodes
         distances = pdist(nodes)
-        
-        # Find all distances that are less than the minimum allowed distance
-        violating_distances = distances[distances < d_min]
-        
-        # Add a large penalty for each violation. 
-        # The penalty should be significant enough to guide the search.
-        # We penalize based on how close the nodes are.
-        if len(violating_distances) > 0:
-            penalty = np.sum(d_min - violating_distances) * 10 # Multiplier makes the penalty stronger
+        violations = distances[distances < d_min]
+        if len(violations) > 0:
+            # The penalty MUST be severe to act as a hard constraint.
+            penalty = 1e7 * len(violations)
 
-    # --- END: NEW PENALTY CODE ---
-
-    # The final fitness now includes the penalty
-    # Note: penalty is subtracted because we are maximizing. A higher penalty lowers the fitness.
-    fitness = w1 * r_cover - w2 * d_var - penalty
+    # --- Main Objectives (Coverage vs. Uniformity) ---
+    r_cover = calculate_coverage(nodes, area_dim, perception_radius)
+    d_var = calculate_distribution_variance(nodes)
+    
+    # This is the corrected fitness calculation.
+    # We are MAXIMIZING coverage and MINIMIZING variance and penalties.
+    # The w3 term is correctly removed.
+    fitness = (w1 * r_cover) - (w2 * d_var) - penalty
+    
     return fitness
 
 
@@ -120,64 +116,67 @@ class EASOA:
                 self.positions[idx] = reverse_pos
 
     def optimize(self):
+        ST = 0.8  # Security threshold for producers
+        
         for t in tqdm(range(self.max_iter), desc="EASOA Optimization"):
             
-            # --- 1. Reverse Elite Selection (EASOA Enhancement) ---
-            # [cite_start]Applied at the start of the iteration to increase diversity [cite: 237]
+            # 1. Reverse Elite Selection (EASOA Enhancement)
             self._reverse_elite_selection()
 
-            # --- Sort sparrows by fitness to assign roles ---
-            sorted_indices = np.argsort(self.fitness)[::-1] # Best fitness is at index 0
+            # Sort sparrows by fitness
+            sorted_indices = np.argsort(self.fitness)[::-1]
+            best_pos_current_iter = self.positions[sorted_indices[0]].copy()
             
-            # --- 2. Producer (Discoverer) Phase (CORRECTED) ---
-            # The best sparrows explore widely
+            # --- 2. Producer (Discoverer) Phase ---
             for i in range(self.num_producers):
                 idx = sorted_indices[i]
-                r1 = np.random.rand()
+                r2 = np.random.rand()
                 
-                # Standard SSA producer update rule to prevent collapsing to origin
-                # This encourages exploration of the search space
-                if np.random.rand() < 0.8: # A common threshold value (ST in SSA literature)
-                    # Move towards a random direction
-                    self.positions[idx] = self.positions[idx] * (1 + np.random.uniform(-0.5, 0.5))
+                if r2 < ST:
+                    # Explore in a random direction
+                    self.positions[idx] += np.random.randn(self.num_dimensions)
                 else:
-                    # Jump to a new random position in the vicinity
-                    self.positions[idx] = self.positions[idx] + np.random.normal(0, 1, self.num_dimensions)
+                    # Move towards the center of the search space ("safe zone")
+                    self.positions[idx] = best_pos_current_iter + np.random.randn(self.num_dimensions) * 0.5
 
-            # --- 3. Scrounger (Joiner) Phase (CORRECTED) ---
-            # The other sparrows follow the best producer, but with the full EASOA enhancement
+            # --- 3. Scrounger (Joiner) Phase ---
             for i in range(self.num_producers, self.num_sparrows):
                 idx = sorted_indices[i]
-                best_producer_pos = self.positions[sorted_indices[0]]
                 
-                # [cite_start]Brightness-Driven Perturbation - Full implementation of Equation (5) [cite: 144]
-                gamma = 0.5 # Attenuation coefficient from the paper
+                # Brightness-Driven Perturbation (Equation 5)
+                best_producer_pos = self.positions[sorted_indices[0]]
+                gamma = 0.5
                 distance_sq = np.sum((self.positions[idx] - best_producer_pos)**2)
                 attraction = self.beta * np.exp(-gamma * distance_sq) * (best_producer_pos - self.positions[idx])
-                
-                # This is the missing random disturbance term (alpha * theta)
                 disturbance = self.alpha * np.random.randn(self.num_dimensions)
-                
-                # Apply both attraction and the random disturbance
                 self.positions[idx] += attraction + disturbance
 
-            # --- 4. Scout Phase (EASOA Enhancement) ---
-            # A random subset becomes scouts to prevent getting stuck
-            scout_indices = np.random.choice(self.num_sparrows, self.num_scouts, replace=False)
+            # --- 4. Scout Phase (with "Safe Zone" logic) ---
+            num_scouts = int(self.num_sparrows * self.scout_ratio)
+            scout_indices = sorted_indices[-num_scouts:] # The worst-performing sparrows become scouts
+
             for idx in scout_indices:
-                # [cite_start]Dynamic Warning Update - Equation (7) [cite: 165]
-                r = np.random.rand()
-                self.positions[idx] += self.delta * (r * self.global_best_pos - self.positions[idx])
+                # If the scout is not the global best, reset its position
+                if not np.array_equal(self.positions[idx], self.global_best_pos):
+                    # Dynamic Warning Update (Equation 7)
+                    r = np.random.uniform(-1, 1)
+                    self.positions[idx] = self.global_best_pos + r * np.abs(self.positions[idx] - self.global_best_pos)
+                else:
+                    # If it is somehow the best, move it randomly
+                    self.positions[idx] += np.random.uniform(-1, 1)
 
             # --- 5. Recalculate Fitness and Update Best ---
             for i in range(self.num_sparrows):
+                # Clip positions to be within bounds
                 self.positions[i] = np.clip(self.positions[i], self.bounds[0], self.bounds[1])
+                # Re-evaluate fitness with the new positions
                 self.fitness[i] = self.obj_func(self.positions[i], **self.func_args)
             
             self._update_global_best()
             self.convergence_curve.append(self.global_best_fit)
             
         return self.global_best_pos, self.global_best_fit
+
 
 
 def plot_results(positions, area_dim, perception_radius, fitness, curve):
