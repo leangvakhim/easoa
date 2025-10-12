@@ -103,13 +103,20 @@ class EASOA:
             # --- Sort sparrows by fitness to assign roles ---
             sorted_indices = np.argsort(self.fitness)[::-1] # Best fitness is at index 0
             
-            # --- 2. Producer (Discoverer) Phase ---
+            # --- 2. Producer (Discoverer) Phase (CORRECTED) ---
             # The best sparrows explore widely
             for i in range(self.num_producers):
                 idx = sorted_indices[i]
                 r1 = np.random.rand()
-                # Equation from standard Sparrow Search for producers
-                self.positions[idx] *= np.exp(-i / (r1 * self.max_iter))
+                
+                # Standard SSA producer update rule to prevent collapsing to origin
+                # This encourages exploration of the search space
+                if np.random.rand() < 0.8: # A common threshold value (ST in SSA literature)
+                    # Move towards a random direction
+                    self.positions[idx] = self.positions[idx] * (1 + np.random.uniform(-0.5, 0.5))
+                else:
+                    # Jump to a new random position in the vicinity
+                    self.positions[idx] = self.positions[idx] + np.random.normal(0, 1, self.num_dimensions)
 
             # --- 3. Scrounger (Joiner) Phase ---
             # The other sparrows follow the best producer, but with the EASOA enhancement
