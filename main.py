@@ -83,6 +83,7 @@ class EASOA:
         self.elite_rate = 0.2
         self.beta = 0.5  # Brightness drive perturbation coefficient
         self.delta = 0.3 # Warning update coefficient
+        self.alpha = 0.1     # <<< ADD THIS LINE: Disturbance intensity factor
         
         self.num_producers = int(self.num_sparrows * self.producer_ratio)
         self.num_scouts = int(self.num_sparrows * self.scout_ratio)
@@ -143,17 +144,22 @@ class EASOA:
                     # Jump to a new random position in the vicinity
                     self.positions[idx] = self.positions[idx] + np.random.normal(0, 1, self.num_dimensions)
 
-            # --- 3. Scrounger (Joiner) Phase ---
-            # The other sparrows follow the best producer, but with the EASOA enhancement
+            # --- 3. Scrounger (Joiner) Phase (CORRECTED) ---
+            # The other sparrows follow the best producer, but with the full EASOA enhancement
             for i in range(self.num_producers, self.num_sparrows):
                 idx = sorted_indices[i]
                 best_producer_pos = self.positions[sorted_indices[0]]
                 
-                # [cite_start]Brightness-Driven Perturbation - Equation (5) [cite: 144]
-                gamma = 0.5 # Attenuation coefficient
+                # [cite_start]Brightness-Driven Perturbation - Full implementation of Equation (5) [cite: 144]
+                gamma = 0.5 # Attenuation coefficient from the paper
                 distance_sq = np.sum((self.positions[idx] - best_producer_pos)**2)
                 attraction = self.beta * np.exp(-gamma * distance_sq) * (best_producer_pos - self.positions[idx])
-                self.positions[idx] += attraction
+                
+                # This is the missing random disturbance term (alpha * theta)
+                disturbance = self.alpha * np.random.randn(self.num_dimensions)
+                
+                # Apply both attraction and the random disturbance
+                self.positions[idx] += attraction + disturbance
 
             # --- 4. Scout Phase (EASOA Enhancement) ---
             # A random subset becomes scouts to prevent getting stuck
