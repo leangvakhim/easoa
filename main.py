@@ -1,35 +1,25 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from scipy.spatial.distance import cdist # <-- IMPORT the optimized distance function
+from scipy.spatial.distance import cdist
 
-# --- Helper Functions ---
+# --- Helper Functions (Optimized and Correct) ---
 
 def calculate_coverage(positions, area_dim, perception_radius, grid_points=100):
-    """
-    Calculates network coverage using a highly optimized vectorized approach.
-    This version is much faster than the loop-based method.
-    """
-    # 1. Create the grid of points to monitor
+    """Calculates network coverage using the fast vectorized approach."""
     grid_x, grid_y = np.meshgrid(np.linspace(0, area_dim, grid_points),
                                  np.linspace(0, area_dim, grid_points))
     monitoring_points = np.vstack([grid_x.ravel(), grid_y.ravel()]).T
     
-    # 2. Calculate the distance from EVERY monitoring point to EVERY sensor node at once.
-    # This creates a matrix where rows are points and columns are nodes.
     distance_matrix = cdist(monitoring_points, positions)
-    
-    # 3. For each monitoring point, find the distance to the CLOSEST node.
     min_distances = np.min(distance_matrix, axis=1)
-    
-    # 4. Count how many points are within the perception radius of at least one node.
     covered_points = np.sum(min_distances <= perception_radius)
             
     return covered_points / len(monitoring_points)
 
 
 def calculate_distribution_variance(positions):
-    # This function is already fast, no changes needed
+    """Calculates the spatial distribution variance (D_var) of nodes."""
     if len(positions) < 2:
         return 0.0
     centroid = np.mean(positions, axis=0)
@@ -37,7 +27,7 @@ def calculate_distribution_variance(positions):
     return np.var(distances)
 
 def objective_function(positions, area_dim, perception_radius, w1, w2, w3):
-    # No changes needed here
+    """The multi-objective fitness function from Equation (8) in the paper[cite: 174]."""
     num_nodes = len(positions.flatten()) // 2
     nodes = positions.reshape(num_nodes, 2)
     
@@ -49,7 +39,7 @@ def objective_function(positions, area_dim, perception_radius, w1, w2, w3):
     return fitness
 
 
-# --- EASOA Implementation (No changes from the previous version) ---
+# --- CORRECTED EASOA Implementation ---
 
 class EASOA:
     def __init__(self, obj_func, num_sparrows, num_dimensions, max_iter, bounds, func_args):
@@ -57,15 +47,19 @@ class EASOA:
         self.num_sparrows = num_sparrows
         self.num_dimensions = num_dimensions
         self.max_iter = max_iter
-        self.bounds = bounds
+        self.bounds = np.array(bounds)
         self.func_args = func_args
         
+        # Algorithm parameters from the paper and standard SSA
         self.discoverer_ratio = 0.2
         self.scout_ratio = 0.1
-        self.beta_initial = 0.5
         self.elite_rate = 0.2
+        self.beta = 1.0          # Brightness attraction coefficient
+        self.gamma = 0.7         # <-- FIX #1: Added attenuation coefficient from Eq. (5) 
+        self.delta = 0.5         # Warning response coefficient from Eq. (7) [cite: 165]
         
         self.num_discoverers = int(self.num_sparrows * self.discoverer_ratio)
+        self.num_scouts = int(self.num_sparrows * self.scout_ratio)
         
         self.positions = np.random.uniform(self.bounds[0], self.bounds[1], (self.num_sparrows, self.num_dimensions))
         
@@ -77,15 +71,16 @@ class EASOA:
         self.global_best_pos = np.zeros(self.num_dimensions)
         self.global_best_fit = -np.inf
         self.convergence_curve = []
-        self._update_best()
+        self._update_global_best()
 
-    def _update_best(self):
+    def _update_global_best(self):
         best_idx = np.argmax(self.fitness)
         if self.fitness[best_idx] > self.global_best_fit:
             self.global_best_fit = self.fitness[best_idx]
             self.global_best_pos = self.positions[best_idx].copy()
 
     def _reverse_elite_selection(self):
+        # Implements Equations (3) and (4) [cite: 137, 140]
         num_elites = int(self.num_sparrows * self.elite_rate)
         elite_indices = np.argsort(self.fitness)[-num_elites:]
         
@@ -99,61 +94,59 @@ class EASOA:
                 self.positions[idx] = reverse_pos
                 self.fitness[idx] = reverse_fitness
 
-    def _brightness_driven_perturbation(self, iter_num):
-        beta = self.beta_initial * (1 - iter_num / self.max_iter)
-        sorted_indices = np.argsort(self.fitness)
+    def _brightness_driven_perturbation(self, idx, brighter_pos):
+        # Implements Equation (5) 
+        current_pos = self.positions[idx]
+        distance_sq = np.sum((current_pos - brighter_pos)**2)
         
-        for i in range(self.num_discoverers, self.num_sparrows):
-            idx = sorted_indices[i]
-            brighter_idx = sorted_indices[np.random.randint(self.num_discoverers, self.num_sparrows)]
-            brighter_pos = self.positions[brighter_idx]
-
-            distance_sq = np.sum((self.positions[idx] - brighter_pos)**2)
-            attraction = beta * np.exp(-distance_sq) * (brighter_pos - self.positions[idx])
-            random_perturb = 0.1 * np.random.randn(self.num_dimensions)
-            
-            self.positions[idx] += attraction + random_perturb
-            self.positions[idx] = np.clip(self.positions[idx], self.bounds[0], self.bounds[1])
-            self.fitness[idx] = self.obj_func(self.positions[idx], **self.func_args)
-
-
-    def _dynamic_warning_update(self):
-        num_scouts = int(self.num_sparrows * self.scout_ratio)
-        scout_indices = np.random.choice(self.num_sparrows, num_scouts, replace=False)
-        delta = 0.5
+        # The formula now correctly includes gamma (γ) to prevent clumping
+        attraction = self.beta * np.exp(-self.gamma * distance_sq) * (brighter_pos - current_pos)
+        random_perturb = np.random.randn(self.num_dimensions) # Represents alpha * theta
         
-        for idx in scout_indices:
-            r = np.random.rand()
-            self.positions[idx] = self.positions[idx] + delta * (r * self.global_best_pos - self.positions[idx])
-            self.positions[idx] = np.clip(self.positions[idx], self.bounds[0], self.bounds[1])
-            self.fitness[idx] = self.obj_func(self.positions[idx], **self.func_args)
+        self.positions[idx] += attraction + random_perturb
+
+    def _dynamic_warning_update(self, idx):
+        # Implements Equation (7) [cite: 165]
+        r = np.random.rand()
+        self.positions[idx] += self.delta * (r * self.global_best_pos - self.positions[idx])
 
     def optimize(self):
         for t in tqdm(range(self.max_iter), desc="EASOA Optimization"):
-            self._reverse_elite_selection()
+            # Sort individuals by fitness (best are at the end)
             sorted_indices = np.argsort(self.fitness)
             
+            # --- FIX #2: Full Discoverer Phase for proper exploration ---
             for i in range(self.num_discoverers):
-                idx = sorted_indices[-(i + 1)]
-                r2 = np.random.rand()
-                if r2 < 0.8:
-                    self.positions[idx] += np.random.randn(self.num_dimensions)
-                else:
-                    self.positions[idx] += np.random.normal(0, 1, self.num_dimensions)
-                self.positions[idx] = np.clip(self.positions[idx], self.bounds[0], self.bounds[1])
-                self.fitness[idx] = self.obj_func(self.positions[idx], **self.func_args)
+                idx = sorted_indices[-(i + 1)] # Get the best individuals
+                r1 = np.random.rand()
+                # This update encourages broader searching
+                self.positions[idx] *= np.exp(-i / (r1 * self.max_iter))
             
-            self._brightness_driven_perturbation(t)
-            self._dynamic_warning_update()
+            # --- Joiner Phase (with Brightness-Driven Perturbation) ---
+            for i in range(self.num_discoverers, self.num_sparrows):
+                idx = sorted_indices[i]
+                brighter_idx = sorted_indices[np.random.randint(self.num_discoverers, self.num_sparrows)]
+                self._brightness_driven_perturbation(idx, self.positions[brighter_idx])
+
+            # --- Scout Phase (with Dynamic Warning Update) ---
+            scout_indices = sorted_indices[:self.num_scouts] # The worst individuals become scouts
+            for idx in scout_indices:
+                self._dynamic_warning_update(idx)
+
+            # --- Apply Reverse Elite Selection ---
+            self._reverse_elite_selection()
+
+            # --- Recalculate fitness for all sparrows and update ---
+            for i in range(self.num_sparrows):
+                self.positions[i] = np.clip(self.positions[i], self.bounds[0], self.bounds[1])
+                self.fitness[i] = self.obj_func(self.positions[i], **self.func_args)
             
-            self._update_best()
+            self._update_global_best()
             self.convergence_curve.append(self.global_best_fit)
 
         return self.global_best_pos, self.global_best_fit
 
-
 def plot_results(positions, area_dim, perception_radius, fitness, curve):
-    # No changes needed here
     num_nodes = len(positions)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -169,8 +162,8 @@ def plot_results(positions, area_dim, perception_radius, fitness, curve):
         ax1.plot(node[0], node[1], 'ko', markersize=8, label='WS Node' if i == 0 else "")
         circle = plt.Circle((node[0], node[1]), perception_radius, color='g', alpha=0.2, label='Coverage' if i == 0 else "")
         ax1.add_artist(circle)
-        
-    ax1.legend()
+    if num_nodes > 0:
+      ax1.legend()
 
     ax2.set_title('EASOA Convergence Curve')
     ax2.plot(curve)
@@ -181,17 +174,20 @@ def plot_results(positions, area_dim, perception_radius, fitness, curve):
     plt.tight_layout()
     plt.show()
 
-# --- Main Execution (No changes) ---
+# --- Main Execution ---
 if __name__ == '__main__':
+    # Simulation Parameters from the paper [cite: 389]
     AREA_DIMENSION = 50
     NUM_NODES = 20
     PERCEPTION_RADIUS = 10
 
+    # Algorithm Parameters from the paper [cite: 401]
     NUM_SPARROWS = 50
     MAX_ITERATIONS = 500
     NUM_DIMENSIONS = NUM_NODES * 2
     BOUNDS = [0, AREA_DIMENSION]
 
+    # Objective function weights [cite: 178]
     W1, W2, W3 = 0.7, 0.2, 0.1
 
     func_args = {
@@ -215,7 +211,7 @@ if __name__ == '__main__':
     
     best_node_positions = best_positions_flat.reshape(NUM_NODES, 2)
     
-    print("\nOptimization Finished.")
-    print(f"Best Fitness Found: {best_fitness}")
+    print(f"\nOptimization Finished.")
+    print(f"Best Fitness Found: {best_fitness:.4f}")
     
     plot_results(best_node_positions, AREA_DIMENSION, PERCEPTION_RADIUS, best_fitness, easoa.convergence_curve)
