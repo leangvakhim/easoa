@@ -24,8 +24,8 @@ def total_coverage_prob(sensors, point, sensor_radius):
         total_prob = 1 - product_failure
     return total_prob
 
-def total_coverage(all_point_probabilities, total_monitoring_point):
-    return sum(all_point_probabilities) / len(total_monitoring_point)
+# def total_coverage(all_point_probabilities, total_monitoring_point):
+#     return sum(all_point_probabilities) / len(total_monitoring_point)
 
 # Example usage
 sensor_positions = [
