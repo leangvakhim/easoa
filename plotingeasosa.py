@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-from testingeasoa import total_coverage_prob
+from calculateeasoa import total_coverage_prob
 import math
 
 def visualize_network(sensors, targets, sensor_radius):
