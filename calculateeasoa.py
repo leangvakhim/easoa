@@ -95,7 +95,8 @@ def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_t
     # energy = 100
     energy = 0
 
-    fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
+    # fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
+    fitness = (w1 * coverage) + (w2 * dvar) - (w3 * energy)
     return fitness
 
 def is_near_boundary(sparrow, deployment_area, threshold=1.0):

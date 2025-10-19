@@ -19,7 +19,8 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
     for i in tqdm(range(max_iter), desc="EASOA Optimization Progress"):
         # 1. Reverse Elite Selection
         sorted_indices = np.argsort(fitness_scores)
-        elite_sparrows = [sparrows[i] for i in sorted_indices[:int(population_size * 0.2)]]
+        elite_sparrows = [sparrows[i] for i in sorted_indices[-int(population_size * 0.2):]]
+        # elite_sparrows = [sparrows[i] for i in sorted_indices[:int(population_size * 0.2)]]
         for elite in elite_sparrows:
             x_min = np.min(elite, axis=0)
             x_max = np.max(elite, axis=0)
