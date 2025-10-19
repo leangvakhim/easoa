@@ -28,6 +28,35 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
         worst_sparrow_index = sorted_indices[0]
         best_sparrow = sparrows[best_sparrow_index]
 
+        # ===================================================================
+        # START: REVERSE ELITE SELECTION STRATEGY (NEWLY ADDED)
+        # ===================================================================
+
+        # Find the min and max boundaries of the current sparrow population
+        # This is needed for Equation (3)
+        all_sparrows_np = np.array(sparrows)
+        x_min = np.min(all_sparrows_np, axis=(0, 1))
+        x_max = np.max(all_sparrows_np, axis=(0, 1))
+
+        # Apply Equation (3) to generate a reverse elite position
+        reverse_best_sparrow = reverse_elite_selection(best_sparrow, x_min, x_max)
+
+        # Calculate the fitness of this new "reverse" sparrow
+        reverse_fitness = fitness_value(reverse_best_sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets)
+
+        # Apply Equation (4): If the reverse sparrow is better, replace the current best
+        # Note: We use ">" because for this problem, a higher fitness score is better.
+        current_best_fitness = fitness_scores[best_sparrow_index]
+        if reverse_fitness > current_best_fitness:
+            sparrows[best_sparrow_index] = reverse_best_sparrow
+            fitness_scores[best_sparrow_index] = reverse_fitness
+            # Update the 'best_sparrow' variable for the rest of the current iteration
+            best_sparrow = sparrows[best_sparrow_index]
+
+        # ===================================================================
+        # END: REVERSE ELITE SELECTION STRATEGY
+        # ===================================================================
+
         # --- Main Population Update Loop ---
         for j in range(population_size):
             # Move most sparrows (joiners) towards the best sparrow

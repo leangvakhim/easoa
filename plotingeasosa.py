@@ -28,7 +28,7 @@ def visualize_network(sensors, targets, sensor_radius):
         color = 'green' if is_covered else 'red'
         label = 'Covered Target' if is_covered and 'Covered Target' not in ax.get_legend_handles_labels()[1] else \
                 'Uncovered Target' if not is_covered and 'Uncovered Target' not in ax.get_legend_handles_labels()[1] else ""
-        ax.plot(target_pos[0], target_pos[1], 'o', color=color, markersize=8, label=label)
+        ax.plot(target_pos[0], target_pos[1], 'o', color=color, markersize=0, label=label)
 
     # 3. Set up the plot aesthetics
     ax.set_title('Wireless Sensor Network Coverage Visualization', fontsize=16)
