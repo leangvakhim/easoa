@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from tqdm import tqdm
 from calculateeasoa import total_coverage_prob, total_coverage, fitness_value, reverse_elite_selection, update_reverse_elite, brightness_driven_perturbation, update_attraction_coefficient, dynamic_warning_update
 
 def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radius, w1, w2, w3):
@@ -7,7 +8,7 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
     sparrows = [np.random.rand(num_sensors, 2) * deployment_area for _ in range(population_size)]
     fitness_scores = np.zeros(population_size)
 
-    for i in range(max_iter):
+    for i in tqdm(range(max_iter), desc="EASOA Optimization Progress"):
         # 1. Reverse Elite Selection
         sorted_indices = np.argsort(fitness_scores)
         elite_sparrows = [sparrows[i] for i in sorted_indices[:int(population_size * 0.2)]]
