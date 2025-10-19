@@ -15,6 +15,7 @@ N = 20
 D = 50
 # MaxIter: Maximum number of iterations
 MaxIter = 500
+# MaxIter = 5
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
 w1, w2, w3 = 0.6, 0.2, 0.2
 # PopSize: Population size
