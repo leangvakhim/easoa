@@ -47,7 +47,7 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
         best_sparrow = sparrows[best_sparrow_index]
         for j in range(population_size):
             for k in range(num_sensors):
-                sparrows[j][k] = dynamic_warning_update(sparrows[j][k], best_sparrow[k], delta=0.5)
+                sparrows[j][k] = dynamic_warning_update(sparrows[j][k], best_sparrow[k], delta=0.3)
 
     # Return the best set of sensor positions found
     best_sparrow_index = np.argmax(fitness_scores)

@@ -1,23 +1,36 @@
 import math
 import random
 import numpy as np
+from scipy.spatial.distance import cdist
 
 ## Equation 1
-def single_sensor_prob(sensor_position, point_position, sensor_radius):
+# def single_sensor_prob(sensor_position, point_position, sensor_radius):
+def single_sensor_prob(distance, sensor_radius):
 
-    distance = math.dist(sensor_position, point_position)
+    # distance = math.dist(sensor_position, point_position)
 
     if distance <= sensor_radius:
         return 1
     else:
         return 0
 def total_coverage_prob(sensors, point, sensor_radius):
+    point = np.array(point).reshape(1, -1)
+    # Calculate distances from all sensors to the point
+    distances = cdist(sensors, point)
     product_failure = 1.0
-    for sensor in sensors:
-        prob_si_detect_pj = single_sensor_prob(sensor, point, sensor_radius)
+
+    # for sensor in sensors:
+    #     prob_si_detect_pj = single_sensor_prob(sensor, point, sensor_radius)
+    #     failure_prob = 1 - prob_si_detect_pj
+    #     product_failure *= failure_prob
+    #     total_prob = 1 - product_failure
+
+    for dist in distances:
+        prob_si_detect_pj = single_sensor_prob(dist, sensor_radius)
         failure_prob = 1 - prob_si_detect_pj
         product_failure *= failure_prob
-        total_prob = 1 - product_failure
+
+    total_prob = 1 - product_failure
     return total_prob
 
 # Equation 2
@@ -50,7 +63,7 @@ def update_attraction_coefficient(beta_initial, k, k_max):
     return beta
 
 # Equation 7
-def dynamic_warning_update(x, x_best, delta=0.5):
+def dynamic_warning_update(x, x_best, delta=0.3):
     r = random.random()
     x_new = x + delta * (r * x_best - x)
     return x_new
