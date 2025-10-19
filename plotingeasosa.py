@@ -17,7 +17,7 @@ def visualize_network(sensors, targets, sensor_radius):
     # 1. Plot each sensor and its coverage radius
     for i, sensor_pos in enumerate(sensors):
         # Plot the sensor location
-        ax.plot(sensor_pos[0], sensor_pos[1], 'bo', markersize=10, label='Sensor' if i == 0 else "")
+        ax.plot(sensor_pos[0], sensor_pos[1], 'bo', markersize=5, label='Sensor' if i == 0 else "")
         # Create and add the circle representing the sensing radius
         coverage_circle = Circle(sensor_pos, sensor_radius, color='green', alpha=0.15)
         ax.add_patch(coverage_circle)

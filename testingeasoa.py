@@ -24,7 +24,7 @@ PopSize = 50
 sensing_radius = 10.0
 coverage = 0.0
 random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
-
+print("random_targets:", random_targets)
 # Example usage
 # sensor_positions = [
 #     (5, 5), (15, 5), (25, 5), (35, 5), (45, 5),

@@ -93,12 +93,15 @@ def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_t
     # Spatial distribution variance (dvar)
     dvar = np.var(sparrow)
 
+    max_possible_variance = (deployment_area**2) / 12.0
+    normalized_dvar = dvar / max_possible_variance
+
     # Energy consumption (simplified as a constant for now)
     # energy = 100
-    energy = 0
+    energy = 100
 
     # fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
-    fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
+    fitness = (w1 * coverage) - (w2 * normalized_dvar) - (w3 * energy)
     return fitness
 
 def is_near_boundary(sparrow, deployment_area, threshold=1.0):
