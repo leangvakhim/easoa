@@ -23,8 +23,15 @@ PopSize = 50
 # sensing_radius: Sensing radius of each sensor
 sensing_radius = 10.0
 coverage = 0.0
-random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
-print("random_targets:", random_targets)
+# Create a uniform grid of target points to evaluate coverage over the entire area
+grid_points = np.linspace(0, D, 25) # Create 25 points from 0 to 50
+random_targets = []
+for x_coord in grid_points:
+    for y_coord in grid_points:
+        random_targets.append((x_coord, y_coord))
+# random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
+# print("random_targets:", random_targets)
+print(f"Generated {len(random_targets)} target points in a uniform grid.")
 # Example usage
 # sensor_positions = [
 #     (5, 5), (15, 5), (25, 5), (35, 5), (45, 5),
