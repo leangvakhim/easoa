@@ -8,9 +8,12 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
     sparrows = [np.random.rand(num_sensors, 2) * deployment_area for _ in range(population_size)]
     fitness_scores = np.zeros(population_size)
 
+    for j, sparrow in enumerate(sparrows):
+        fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets)
+
     # Initialize warning value
     # warning_value = 0.5
-    warning_value = -100
+    warning_value = 0
     beta_initial = 0.5
 
     for i in tqdm(range(max_iter), desc="EASOA Optimization Progress"):
