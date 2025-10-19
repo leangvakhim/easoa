@@ -98,7 +98,7 @@ def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_t
 
     # Energy consumption (simplified as a constant for now)
     # energy = 100
-    energy = 100
+    energy = 0
 
     # fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
     fitness = (w1 * coverage) - (w2 * normalized_dvar) - (w3 * energy)
