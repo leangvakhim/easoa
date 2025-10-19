@@ -36,7 +36,7 @@ def update_reverse_elite(x, x_prime):
         return x
 
 # Equation 5
-def brightness_driven_perturbation(x_i, x_j, beta, alpha=0.5, gamma=0.7):
+def brightness_driven_perturbation(x_i, x_j, beta=0.5, alpha=0.5, gamma=0.7):
     distance_square = (x_i - x_j) ** 2
     # theta = np.random.randn(*x_i.shape) * 0.1
     theta = 0.1
@@ -50,7 +50,7 @@ def update_attraction_coefficient(beta_initial, k, k_max):
     return beta
 
 # Equation 7
-def dynamic_warning_update(x, x_best, delta):
+def dynamic_warning_update(x, x_best, delta=0.5):
     r = random.random()
     x_new = x + delta * (r * x_best - x)
     return x_new
