@@ -40,7 +40,7 @@ def brightness_driven_perturbation(x_i, x_j, beta=0.5, alpha=0.5, gamma=0.7):
     distance_square = (x_i - x_j) ** 2
     # theta = np.random.randn(*x_i.shape) * 0.1
     theta = 0.1
-    perturbation = beta * math.exp(-gamma * distance_square)
+    perturbation = beta * np.exp(-gamma * distance_square)
     random_term = alpha * theta
     return x_i + perturbation + random_term
 
