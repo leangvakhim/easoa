@@ -57,9 +57,11 @@ def update_reverse_elite(x, x_prime, w1, w2, w3, sensing_radius):
 
 # Equation 5
 def brightness_driven_perturbation(x_i, x_j, beta=0.5, alpha=0.5, gamma=0.7):
-    distance_square = (x_i - x_j) ** 2
+    # distance_square = (x_i - x_j) ** 2
     # theta = np.random.randn(*x_i.shape) * 0.1
-    theta = 0.1
+    # theta = 0.1
+    distance_square = np.sum((x_i - x_j)**2)
+    theta = np.random.randn(*x_i.shape) * 0.1
     perturbation = beta * np.exp(-gamma * distance_square)
     random_term = alpha * theta
     return x_i + perturbation + random_term
@@ -96,7 +98,7 @@ def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_t
     energy = 0
 
     # fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
-    fitness = (w1 * coverage) + (w2 * dvar) - (w3 * energy)
+    fitness = (w1 * coverage) - (w2 * dvar) - (w3 * energy)
     return fitness
 
 def is_near_boundary(sparrow, deployment_area, threshold=1.0):
