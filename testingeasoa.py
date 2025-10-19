@@ -8,7 +8,7 @@ from plotingeasosa import visualize_network
 from calculateeasoa import total_coverage_prob, total_coverage
 from easoa import easoa
 
-# random.seed(123)
+random.seed(123)
 # N: Number of sensor nodes
 N = 20
 # D: Deployment area (D x D)
@@ -22,6 +22,8 @@ w1, w2, w3 = 0.6, 0.2, 0.2
 PopSize = 50
 # sensing_radius: Sensing radius of each sensor
 sensing_radius = 10.0
+coverage = 0.0
+random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
 
 # Example usage
 # sensor_positions = [
@@ -30,13 +32,12 @@ sensing_radius = 10.0
 #     (5, 25), (15, 25), (25, 25), (35, 25), (45, 25),
 #     (5, 35), (15, 35), (25, 35), (35, 35), (45, 35),
 # ]
-coverage = 0.0
 
 
-random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(N)]
+
 
 print("Running EASOA to optimize sensor positions...")
-optimized_sensor_positions = easoa(N, D, MaxIter, PopSize, sensing_radius, w1, w2, w3)
+optimized_sensor_positions = easoa(N, D, MaxIter, PopSize, sensing_radius, w1, w2, w3, random_targets)
 print("Optimization complete.")
 
 # for point in random_targets:

@@ -80,10 +80,10 @@ def dynamic_warning_update(x, x_best, delta=0.3):
 #     fitness = (omega1 * coverage) - (omega2 * dvar) - (omega3 * energy)
 #     return fitness
 
-def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area):
+def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets):
     # Coverage
     coverage = 0
-    random_targets = [(random.randrange(0, deployment_area), random.randrange(0, deployment_area)) for _ in range(50)] # Using 50 random targets for evaluation
+    # random_targets = [(random.randrange(0, deployment_area), random.randrange(0, deployment_area)) for _ in range(50)] # Using 50 random targets for evaluation
     for point in random_targets:
         coverage += total_coverage_prob(sparrow, point, sensing_radius)
     coverage = total_coverage(coverage, len(random_targets))

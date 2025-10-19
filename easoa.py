@@ -3,13 +3,14 @@ import numpy as np
 from tqdm import tqdm
 from calculateeasoa import total_coverage_prob, total_coverage, fitness_value, reverse_elite_selection, update_reverse_elite, brightness_driven_perturbation, update_attraction_coefficient, dynamic_warning_update, is_near_boundary
 
-def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radius, w1, w2, w3):
+def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radius, w1, w2, w3, random_targets):
     # Initialize the population of sparrows
     sparrows = [np.random.rand(num_sensors, 2) * deployment_area for _ in range(population_size)]
     fitness_scores = np.zeros(population_size)
 
     # Initialize warning value
-    warning_value = 0.5
+    # warning_value = 0.5
+    warning_value = -100
     beta_initial = 0.5
 
     for i in tqdm(range(max_iter), desc="EASOA Optimization Progress"):
@@ -57,7 +58,7 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
 
         # 3. Fitness Calculation and Sorting (at the end of the loop)
         for j, sparrow in enumerate(sparrows):
-            fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area)
+            fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets)
 
         # # 2. Fitness Calculation and Sorting
         # for j, sparrow in enumerate(sparrows):
