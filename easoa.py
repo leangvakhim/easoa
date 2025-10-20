@@ -21,12 +21,16 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
     beta_initial = 0.5
     beta = 0.5
 
+    safe_zone_center = np.array([deployment_area / 2.0, deployment_area / 2.0])
+
     for i in tqdm(range(max_iter), desc="EASOA Optimization Progress"):
         # Sort by fitness to find the best and worst sparrows
         sorted_indices = np.argsort(fitness_scores)
         best_sparrow_index = sorted_indices[-1] # Highest score is best
         worst_sparrow_index = sorted_indices[0]
         best_sparrow = sparrows[best_sparrow_index]
+
+        average_fitness = np.mean(fitness_scores)
 
         # ===================================================================
         # START: REVERSE ELITE SELECTION STRATEGY (NEWLY ADDED)
@@ -57,29 +61,86 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
         # END: REVERSE ELITE SELECTION STRATEGY
         # ===================================================================
 
+        # # --- Main Population Update Loop ---
+        # for j in range(population_size):
+        #     # Move most sparrows (joiners) towards the best sparrow
+        #     if j != best_sparrow_index:
+        #         for k in range(num_sensors):
+        #             # This combines brightness perturbation (exploration) and a move towards the best (exploitation)
+        #             rand_sparrow_index = random.randint(0, population_size - 1)
+
+        #             # Brightness perturbation component
+        #             perturb_vector = brightness_driven_perturbation(sparrows[j][k], sparrows[rand_sparrow_index][k], beta) - sparrows[j][k]
+
+        #             # Movement towards the best solution
+        #             exploitation_vector = 0.5 * (best_sparrow[k] - sparrows[j][k]) # A simple pull towards the best
+
+        #             sparrows[j][k] += perturb_vector + exploitation_vector
+
+        # # Apply Dynamic Warning Update for sparrows that get too close to the best (to avoid crowding)
+        # for j in range(population_size):
+        #     if j != best_sparrow_index:
+        #         dist_to_best = np.linalg.norm(sparrows[j] - best_sparrow)
+        #         if dist_to_best < 2.0: # If a sparrow is too close
+        #             for k in range(num_sensors):
+        #                 sparrows[j][k] = dynamic_warning_update(sparrows[j][k], best_sparrow[k])
+
         # --- Main Population Update Loop ---
         for j in range(population_size):
-            # Move most sparrows (joiners) towards the best sparrow
-            if j != best_sparrow_index:
-                for k in range(num_sensors):
-                    # This combines brightness perturbation (exploration) and a move towards the best (exploitation)
-                    rand_sparrow_index = random.randint(0, population_size - 1)
+            if j == best_sparrow_index:
+                continue
 
+            # ===================================================================
+            # START: FITNESS > WARNING VALUE CHECK (CORRECTED)
+            # ===================================================================
+            # If a sparrow's fitness is below average, move it towards the safe zone
+            if fitness_scores[j] < average_fitness:
+                 # Move closer to the safe zone (exploitation)
+                direction_to_safe_zone = safe_zone_center - sparrows[j]
+                sparrows[j] += 0.5 * np.random.rand() * direction_to_safe_zone
+            else:
+                # Perform extensive search (exploration)
+                for k in range(num_sensors):
+                    rand_sparrow_index = random.randint(0, population_size - 1)
                     # Brightness perturbation component
                     perturb_vector = brightness_driven_perturbation(sparrows[j][k], sparrows[rand_sparrow_index][k], beta) - sparrows[j][k]
-
                     # Movement towards the best solution
-                    exploitation_vector = 0.5 * (best_sparrow[k] - sparrows[j][k]) # A simple pull towards the best
-
+                    exploitation_vector = 0.5 * (best_sparrow[k] - sparrows[j][k])
                     sparrows[j][k] += perturb_vector + exploitation_vector
+            # ===================================================================
+            # END: FITNESS > WARNING VALUE CHECK
+            # ===================================================================
 
-        # Apply Dynamic Warning Update for sparrows that get too close to the best (to avoid crowding)
-        for j in range(population_size):
-            if j != best_sparrow_index:
-                dist_to_best = np.linalg.norm(sparrows[j] - best_sparrow)
-                if dist_to_best < 2.0: # If a sparrow is too close
-                    for k in range(num_sensors):
-                        sparrows[j][k] = dynamic_warning_update(sparrows[j][k], best_sparrow[k])
+            # ===================================================================
+            # START: DYNAMIC WARNING UPDATE (from original code)
+            # ===================================================================
+            dist_to_best = np.linalg.norm(sparrows[j] - best_sparrow)
+            if dist_to_best < 2.0: # If a sparrow is too close, push it away
+                for k in range(num_sensors):
+                    sparrows[j][k] = dynamic_warning_update(sparrows[j][k], best_sparrow[k])
+            # ===================================================================
+            # END: DYNAMIC WARNING UPDATE
+            # ===================================================================
+
+            # ===================================================================
+            # START: EDGE HANDLING STRATEGY (CORRECTED)
+            # ===================================================================
+            # Instead of hard clipping at the end, check for boundary proximity now
+            if is_near_boundary(sparrows[j], deployment_area, threshold=1.0):
+                # Apply edge move closer strategy: pull towards the center
+                direction_to_center = safe_zone_center - sparrows[j]
+                sparrows[j] += 0.3 * np.random.rand() * direction_to_center
+            # ===================================================================
+            # END: EDGE HANDLING STRATEGY
+            # ===================================================================
+
+        # ===================================================================
+        # START: UPDATE ATTRACTION COEFFICIENT (NEWLY ADDED)
+        # ===================================================================
+        beta = update_attraction_coefficient(beta_initial, i, max_iter)
+        # ===================================================================
+        # END: UPDATE ATTRACTION COEFFICIENT
+        # ===================================================================
 
         # Final Fitness Calculation and Boundary Clipping for the new generation
         for j, sparrow in enumerate(sparrows):
@@ -89,6 +150,6 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
 
     # Return the best set of sensor positions found
     best_sparrow_index = np.argmax(fitness_scores)
-    print("Best Fitness Score:", fitness_scores[best_sparrow_index])
-    print("Best Sparrow Position:", sparrows[best_sparrow_index])
+    # print("Best Fitness Score:", fitness_scores[best_sparrow_index])
+    # print("Best Sparrow Position:", sparrows[best_sparrow_index])
     return sparrows[best_sparrow_index]
