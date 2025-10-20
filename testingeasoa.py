@@ -5,7 +5,7 @@ from tqdm import tqdm
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist
 from plotingeasosa import visualize_network
-from calculateeasoa import total_coverage_prob, total_coverage
+from calculateeasoa import total_coverage_prob, total_coverage, total_coverage_prob_vectorized
 from easoa import easoa
 
 random.seed(123)
@@ -59,7 +59,8 @@ print("Optimization complete.")
 # print(f"Total Network Coverage: {total_value_coverage:.6f}")
 
 for point in random_targets:
-    coverage_prob = total_coverage_prob(optimized_sensor_positions, point, sensing_radius)
+    coverage_prob = total_coverage_prob_vectorized(optimized_sensor_positions, point, sensing_radius)
+    # coverage_prob = total_coverage_prob(optimized_sensor_positions, point, sensing_radius)
     coverage += coverage_prob
 
 total_value_coverage = total_coverage(coverage, len(random_targets))
