@@ -21,17 +21,18 @@ MaxIter = 500
 w1 = 1 - 1e-61
 w2 = w3 = 5e-62
 # PopSize: Population size
-PopSize = 50
+PopSize = 500
 # sensing_radius: Sensing radius of each sensor
 sensing_radius = 10.0
 coverage = 0.0
-# Create a uniform grid of target points to evaluate coverage over the entire area
-grid_points = np.linspace(0, D, 25) # Create 25 points from 0 to 50
-random_targets = []
-for x_coord in grid_points:
-    for y_coord in grid_points:
-        random_targets.append((x_coord, y_coord))
-# random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
+
+# grid_points = np.linspace(0, D, 25)
+# random_targets = []
+# for x_coord in grid_points:
+#     for y_coord in grid_points:
+#         random_targets.append((x_coord, y_coord))
+
+random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
 # print("random_targets:", random_targets)
 # print(f"Generated {len(random_targets)} target points in a uniform grid.")
 # Example usage
@@ -52,23 +53,8 @@ print("Optimization complete.")
 random_targets_np = np.array(random_targets)
 
 all_coverage_probs = total_coverage_prob_vectorized(optimized_sensor_positions, random_targets_np, sensing_radius)
-# The total coverage is the average of all individual target coverage probabilities.
 coverage = np.sum(all_coverage_probs)
 
-
-# for point in random_targets:
-#     coverage_prob = total_coverage_prob(sensor_positions, point, sensing_radius)
-#     coverage += coverage_prob
-    # print(f"Total Coverage Probability for Target Point {point}: {coverage_prob:.6f}")
-    # print("-" * 20)
-
-# total_value_coverage = total_coverage(coverage, len(random_targets))
-# print(f"Total Network Coverage: {total_value_coverage:.6f}")
-
-# for point in random_targets:
-#     coverage_prob = total_coverage_prob_vectorized(optimized_sensor_positions, point, sensing_radius)
-#     # coverage_prob = total_coverage_prob(optimized_sensor_positions, point, sensing_radius)
-#     coverage += coverage_prob
 
 total_value_coverage = total_coverage(coverage, len(random_targets))
 print(f"Total Network Coverage with Optimized Positions: {total_value_coverage:.6f}")
