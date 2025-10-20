@@ -17,21 +17,21 @@ D = 50
 MaxIter = 500
 # MaxIter = 5
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
-# w1, w2, w3 = 0.8, 0.1, 0.1
-w1 = 1 - 1e-61
-w2 = w3 = 5e-62
+w1, w2, w3 = 0.8, 0.2, 0.0
+# w1 = 1 - 1e-61
+# w2 = w3 = 5e-62
 # PopSize: Population size
 PopSize = 50
 # sensing_radius: Sensing radius of each sensor
 sensing_radius = 10.0
 coverage = 0.0
 # Create a uniform grid of target points to evaluate coverage over the entire area
-# grid_points = np.linspace(0, D, 25) # Create 25 points from 0 to 50
-# random_targets = []
-# for x_coord in grid_points:
-#     for y_coord in grid_points:
-#         random_targets.append((x_coord, y_coord))
-random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
+grid_points = np.linspace(0, D, 25) # Create 25 points from 0 to 50
+random_targets = []
+for x_coord in grid_points:
+    for y_coord in grid_points:
+        random_targets.append((x_coord, y_coord))
+# random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
 # print("random_targets:", random_targets)
 # print(f"Generated {len(random_targets)} target points in a uniform grid.")
 # Example usage
