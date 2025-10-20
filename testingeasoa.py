@@ -17,9 +17,9 @@ D = 50
 MaxIter = 500
 # MaxIter = 5
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
-w1, w2, w3 = 0.4, 0.6, 0.0
-# w1 = 1 - 1e-61
-# w2 = w3 = 5e-62
+# w1, w2, w3 = 0.4, 0.6, 0.0
+w1 = 1 - 1e-61
+w2 = w3 = 5e-62
 # PopSize: Population size
 PopSize = 50
 # sensing_radius: Sensing radius of each sensor
@@ -49,6 +49,13 @@ print("Running EASOA to optimize sensor positions...")
 optimized_sensor_positions = easoa(N, D, MaxIter, PopSize, sensing_radius, w1, w2, w3, random_targets)
 print("Optimization complete.")
 
+random_targets_np = np.array(random_targets)
+
+all_coverage_probs = total_coverage_prob_vectorized(optimized_sensor_positions, random_targets_np, sensing_radius)
+# The total coverage is the average of all individual target coverage probabilities.
+coverage = np.sum(all_coverage_probs)
+
+
 # for point in random_targets:
 #     coverage_prob = total_coverage_prob(sensor_positions, point, sensing_radius)
 #     coverage += coverage_prob
@@ -58,10 +65,10 @@ print("Optimization complete.")
 # total_value_coverage = total_coverage(coverage, len(random_targets))
 # print(f"Total Network Coverage: {total_value_coverage:.6f}")
 
-for point in random_targets:
-    coverage_prob = total_coverage_prob_vectorized(optimized_sensor_positions, point, sensing_radius)
-    # coverage_prob = total_coverage_prob(optimized_sensor_positions, point, sensing_radius)
-    coverage += coverage_prob
+# for point in random_targets:
+#     coverage_prob = total_coverage_prob_vectorized(optimized_sensor_positions, point, sensing_radius)
+#     # coverage_prob = total_coverage_prob(optimized_sensor_positions, point, sensing_radius)
+#     coverage += coverage_prob
 
 total_value_coverage = total_coverage(coverage, len(random_targets))
 print(f"Total Network Coverage with Optimized Positions: {total_value_coverage:.6f}")
