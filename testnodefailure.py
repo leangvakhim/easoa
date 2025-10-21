@@ -104,8 +104,7 @@ def run_failure_simulation(failure_rate):
         'failure_rate': failure_rate,
         'retention': coverage_after_failure_absolute,
         'recovery_time': recovery_time,
-        'computation_time': computation_time,
-        'node_replacement_rate': node_replacement_rate
+        'computation_time': computation_time
     }
 
 
@@ -123,15 +122,12 @@ if __name__ == "__main__":
     ret_paper = {0.1: 91.2, 0.2: 87.5, 0.3: 83.5}
     rec_paper = {0.1: 2.7, 0.2: 3.2, 0.3: 3.7}
     comp_paper = {0.1: 2.2, 0.2: 2.4, 0.3: 2.5}
-    replace_paper = {0.1: 9.8, 0.2: 12.5, 0.3: 15.8}
 
     r = {res['failure_rate']: res for res in results}
 
-    print(f"My Retention %      | {r[0.1]['retention']:.2f}        | {r[0.2]['retention']:.2f}        | {r[0.3]['retention']:.2f}        |")
-    print(f"Paper Retention %    | {ret_paper[0.1]}       | {ret_paper[0.2]}       | {ret_paper[0.3]}       |")
-    print(f"My Recovery s        | {r[0.1]['recovery_time']:.2f}        | {r[0.2]['recovery_time']:.2f}        | {r[0.3]['recovery_time']:.2f}        |")
-    print(f"Paper Recovery s     | {rec_paper[0.1]}         | {rec_paper[0.2]}         | {rec_paper[0.3]}         |")
-    print(f"My Computation s     | {r[0.1]['computation_time']:.2f}        | {r[0.2]['computation_time']:.2f}        | {r[0.3]['computation_time']:.2f}        |")
-    print(f"Paper Computation s  | {comp_paper[0.1]}         | {comp_paper[0.2]}         | {comp_paper[0.3]}         |")
-    print(f"My Node Replace %    | {str(r[0.1]['node_replacement_rate']):<11} | {str(r[0.2]['node_replacement_rate']):<11} | {str(r[0.3]['node_replacement_rate']):<11} |")
-    print(f"Paper Node Replace % | {replace_paper[0.1]:<11} | {replace_paper[0.2]:<11} | {replace_paper[0.3]:<11} |")
+    print(f"My Coverage (%)      | {r[0.1]['retention']:.2f}        | {r[0.2]['retention']:.2f}        | {r[0.3]['retention']:.2f}        |")
+    print(f"Paper Coverage (%)    | {ret_paper[0.1]}       | {ret_paper[0.2]}       | {ret_paper[0.3]}       |")
+    print(f"My Recovery (s)       | {r[0.1]['recovery_time']:.2f}        | {r[0.2]['recovery_time']:.2f}        | {r[0.3]['recovery_time']:.2f}        |")
+    print(f"Paper Recovery (s)     | {rec_paper[0.1]}         | {rec_paper[0.2]}         | {rec_paper[0.3]}         |")
+    print(f"My Computation (s)     | {r[0.1]['computation_time']:.2f}        | {r[0.2]['computation_time']:.2f}        | {r[0.3]['computation_time']:.2f}        |")
+    print(f"Paper Computation (s)  | {comp_paper[0.1]}         | {comp_paper[0.2]}         | {comp_paper[0.3]}         |")
