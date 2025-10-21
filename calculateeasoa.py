@@ -93,6 +93,7 @@
 
 # def distance(point1, point2):
 #     return np.sqrt(np.sum((point1 - point2)**2))
+
 import math
 import random
 import numpy as np
@@ -134,8 +135,9 @@ def reverse_elite_selection(x, x_min, x_max):
     return x_max + x_min - x
 
 # Equation 4
-def update_reverse_elite(x, x_prime, w1, w2, w3, sensing_radius):
-    if fitness_value(x_prime, w1, w2, w3, sensing_radius) < fitness_value(x, w1, w2, w3, sensing_radius):
+# This function is not used in your easoa.py, but I've updated its signature just in case.
+def update_reverse_elite(x, x_prime, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx):
+    if fitness_value(x_prime, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx) < fitness_value(x, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx):
         return x_prime
     else:
         return x
@@ -159,46 +161,36 @@ def dynamic_warning_update(x, x_best, delta=0.3):
     x_new = x + delta * (r * x_best - x)
     return x_new
 
-def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets):
+# --- OPTIMIZED FUNCTION ---
+def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx):
     energy = 0
-    random_targets_np = np.array(random_targets)
+    # REMOVED: random_targets_np = np.array(random_targets)
     all_coverage_probs = total_coverage_prob_vectorized(sparrow, random_targets_np, sensing_radius)
     coverage = np.mean(all_coverage_probs)
 
-    # --- START OF NEW D_VAR CALCULATION (GRID-BASED) ---
+    # --- START OF D_VAR CALCULATION (GRID-BASED) ---
     grid_size = 5 # Create a 5x5 virtual grid
     cell_size = deployment_area / grid_size
 
-    # Use numpy's histogram2d to count sensors in each grid cell
     counts, _, _ = np.histogram2d(
         sparrow[:, 0], # All sensor x-coordinates
         sparrow[:, 1], # All sensor y-coordinates
-        # Define the bins for the 5x5 grid
         bins=[np.arange(0, deployment_area + cell_size, cell_size),
               np.arange(0, deployment_area + cell_size, cell_size)]
     )
-
-    # D_var is the variance of the counts in each cell
-    # Clumped = [20, 0, 0...] = HIGH variance (Bad)
-    # Spread = [1, 1, 0, 1...] = LOW variance (Good)
     dvar = np.var(counts)
-    # --- END OF NEW D_VAR CALCULATION ---
+    # --- END OF D_VAR CALCULATION ---
 
-    # Normalize the variance (this is an approximation)
-    # A perfect uniform distribution (20 nodes in 25 cells) has some variance,
-    # but a fully clumped one (20 in 1 cell) is much higher.
-    # We can normalize by the max possible variance (all nodes in one cell)
-    # This isn't perfect, but it scales the value.
-    max_dvar_approx = np.var([len(sparrow)] + [0]*(grid_size**2 - 1))
+    # REMOVED: max_dvar_approx = np.var([len(sparrow)] + [0]*(grid_size**2 - 1))
+
     if max_dvar_approx == 0:
         normalized_dvar = 0
     else:
         normalized_dvar = dvar / max_dvar_approx
 
-    # Fitness function will try to MINIMIZE normalized_dvar,
-    # which now correctly means spreading the nodes out.
     fitness = (w1 * coverage) - (w2 * normalized_dvar) - (w3 * energy)
     return fitness
+# --- END OF OPTIMIZED FUNCTION ---
 
 def is_near_boundary(sparrow, deployment_area, threshold=1.0):
     for sensor in sparrow:
