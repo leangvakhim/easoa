@@ -69,11 +69,17 @@ def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_t
     random_targets_np = np.array(random_targets)
     all_coverage_probs = total_coverage_prob_vectorized(sparrow, random_targets_np, sensing_radius)
     coverage = np.mean(all_coverage_probs)
-    # dvar = np.var(sparrow)
-    if len(sparrow) < 2:
-        dvar = 0
-    else:
-        dvar = np.var(pdist(sparrow))
+    grid_size = 5
+    cell_size = deployment_area / grid_size
+
+    counts, _, _ = np.histogram2d(
+        sparrow[:, 0], # All sensor x-coordinates
+        sparrow[:, 1], # All sensor y-coordinates
+        # Define the bins for the 5x5 grid
+        bins=[np.arange(0, deployment_area + cell_size, cell_size),
+              np.arange(0, deployment_area + cell_size, cell_size)]
+    )
+    dvar = np.var(counts)
     max_possible_variance = (deployment_area**2) / 12.0
     normalized_dvar = dvar / max_possible_variance
     fitness = (w1 * coverage) - (w2 * normalized_dvar) - (w3 * energy)
