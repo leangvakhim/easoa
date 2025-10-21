@@ -10,13 +10,15 @@ from calculateeasoa import (
     is_near_boundary
 )
 
-def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radius, w1, w2, w3, random_targets):
+# --- OPTIMIZED FUNCTION SIGNATURE ---
+def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radius, w1, w2, w3, random_targets_np, max_dvar_approx):
     # Initialize the population of sparrows
     sparrows = [np.random.rand(num_sensors, 2) * deployment_area for _ in range(population_size)]
     fitness_scores = np.zeros(population_size)
 
     for j, sparrow in enumerate(sparrows):
-        fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets)
+        # Pass new args
+        fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx)
 
     beta_initial = 0.5
     beta = 0.5
@@ -36,7 +38,8 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
 
         reverse_best_sparrow = reverse_elite_selection(best_sparrow, x_min, x_max)
 
-        reverse_fitness = fitness_value(reverse_best_sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets)
+        # Pass new args
+        reverse_fitness = fitness_value(reverse_best_sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx)
 
         current_best_fitness = fitness_scores[best_sparrow_index]
         if reverse_fitness > current_best_fitness:
@@ -71,7 +74,8 @@ def easoa(num_sensors, deployment_area, max_iter, population_size, sensing_radiu
 
         for j, sparrow in enumerate(sparrows):
             sparrows[j] = np.clip(sparrow, 0, deployment_area)
-            fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets)
+            # Pass new args
+            fitness_scores[j] = fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx)
 
     best_sparrow_index = np.argmax(fitness_scores)
     # print("Best Fitness Score:", fitness_scores[best_sparrow_index])

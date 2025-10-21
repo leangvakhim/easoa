@@ -125,8 +125,8 @@ if __name__ == "__main__":
 
     r = {res['failure_rate']: res for res in results}
 
-    print(f"My Coverage %      | {r[0.1]['retention']:.2f}        | {r[0.2]['retention']:.2f}        | {r[0.3]['retention']:.2f}        |")
-    print(f"Paper Coverage %    | {ret_paper[0.1]}       | {ret_paper[0.2]}       | {ret_paper[0.3]}       |")
+    print(f"My Retention %      | {r[0.1]['retention']:.2f}        | {r[0.2]['retention']:.2f}        | {r[0.3]['retention']:.2f}        |")
+    print(f"Paper Retention %    | {ret_paper[0.1]}       | {ret_paper[0.2]}       | {ret_paper[0.3]}       |")
     print(f"My Recovery s        | {r[0.1]['recovery_time']:.2f}        | {r[0.2]['recovery_time']:.2f}        | {r[0.3]['recovery_time']:.2f}        |")
     print(f"Paper Recovery s     | {rec_paper[0.1]}         | {rec_paper[0.2]}         | {rec_paper[0.3]}         |")
     print(f"My Computation s     | {r[0.1]['computation_time']:.2f}        | {r[0.2]['computation_time']:.2f}        | {r[0.3]['computation_time']:.2f}        |")

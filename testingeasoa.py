@@ -15,16 +15,14 @@ N = 20
 D = 50
 # MaxIter: Maximum number of iterations
 MaxIter = 500
-# MaxIter = 5
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
 w1, w2, w3 = 0.7, 0.3, 0.0
-# w1 = 1 - 1e-61
-# w2 = w3 = 5e-62
 # PopSize: Population size
 PopSize = 50
 # sensing_radius: Sensing radius of each sensor
 sensing_radius = 10.0
 coverage = 0.0
+grid_size = 5 # Must match calculateeasoa.py
 
 grid_points = np.linspace(0, D, 25)
 random_targets = []
@@ -32,29 +30,19 @@ for x_coord in grid_points:
     for y_coord in grid_points:
         random_targets.append((x_coord, y_coord))
 
-# random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
-# print("random_targets:", random_targets)
-# print(f"Generated {len(random_targets)} target points in a uniform grid.")
-# Example usage
-# sensor_positions = [
-#     (5, 5), (15, 5), (25, 5), (35, 5), (45, 5),
-#     (5, 15), (15, 15), (25, 15), (35, 15), (45, 15),
-#     (5, 25), (15, 25), (25, 25), (35, 25), (45, 25),
-#     (5, 35), (15, 35), (25, 35), (35, 35), (45, 35),
-# ]
-
-
-
+# --- Pre-calculate arguments ---
+random_targets_np = np.array(random_targets)
+max_dvar_approx = np.var([N] + [0]*(grid_size**2 - 1))
+if max_dvar_approx == 0: max_dvar_approx = 1
+# --- End Pre-calculation ---
 
 print("Running EASOA to optimize sensor positions...")
-optimized_sensor_positions = easoa(N, D, MaxIter, PopSize, sensing_radius, w1, w2, w3, random_targets)
+# --- Pass new args to easoa ---
+optimized_sensor_positions = easoa(N, D, MaxIter, PopSize, sensing_radius, w1, w2, w3, random_targets_np, max_dvar_approx)
 print("Optimization complete.")
-
-random_targets_np = np.array(random_targets)
 
 all_coverage_probs = total_coverage_prob_vectorized(optimized_sensor_positions, random_targets_np, sensing_radius)
 coverage = np.sum(all_coverage_probs)
-
 
 total_value_coverage = total_coverage(coverage, len(random_targets))
 print(f"Total Network Coverage with Optimized Positions: {total_value_coverage:.6f}")
