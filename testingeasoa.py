@@ -26,13 +26,13 @@ PopSize = 500
 sensing_radius = 10.0
 coverage = 0.0
 
-# grid_points = np.linspace(0, D, 25)
-# random_targets = []
-# for x_coord in grid_points:
-#     for y_coord in grid_points:
-#         random_targets.append((x_coord, y_coord))
+grid_points = np.linspace(0, D, 25)
+random_targets = []
+for x_coord in grid_points:
+    for y_coord in grid_points:
+        random_targets.append((x_coord, y_coord))
 
-random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
+# random_targets = [(random.randrange(0, D), random.randrange(0, D)) for _ in range(100)]
 # print("random_targets:", random_targets)
 # print(f"Generated {len(random_targets)} target points in a uniform grid.")
 # Example usage
