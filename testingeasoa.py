@@ -21,7 +21,7 @@ w1, w2, w3 = 0.7, 0.3, 0.0
 # w1 = 1 - 1e-61
 # w2 = w3 = 5e-62
 # PopSize: Population size
-PopSize = 500
+PopSize = 50
 # sensing_radius: Sensing radius of each sensor
 sensing_radius = 10.0
 coverage = 0.0
