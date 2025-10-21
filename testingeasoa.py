@@ -17,9 +17,9 @@ D = 50
 MaxIter = 500
 # MaxIter = 5
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
-# w1, w2, w3 = 0.4, 0.6, 0.0
-w1 = 1 - 1e-61
-w2 = w3 = 5e-62
+w1, w2, w3 = 0.4, 0.6, 0.0
+# w1 = 1 - 1e-61
+# w2 = w3 = 5e-62
 # PopSize: Population size
 PopSize = 500
 # sensing_radius: Sensing radius of each sensor

@@ -1,7 +1,7 @@
 import math
 import random
 import numpy as np
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, pdist
 
 ## Equation 1
 def single_sensor_prob(distance, sensor_radius):
@@ -69,7 +69,11 @@ def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_t
     random_targets_np = np.array(random_targets)
     all_coverage_probs = total_coverage_prob_vectorized(sparrow, random_targets_np, sensing_radius)
     coverage = np.mean(all_coverage_probs)
-    dvar = np.var(sparrow)
+    # dvar = np.var(sparrow)
+    if len(sparrow) < 2:
+        dvar = 0
+    else:
+        dvar = np.var(pdist(sparrow))
     max_possible_variance = (deployment_area**2) / 12.0
     normalized_dvar = dvar / max_possible_variance
     fitness = (w1 * coverage) - (w2 * normalized_dvar) - (w3 * energy)
