@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
+import numpy as np
 from calculateeasoa import total_coverage_prob_vectorized
 import math
 
@@ -14,12 +15,13 @@ def visualize_network(sensors, targets, sensor_radius):
         ax.add_patch(coverage_circle)
 
     # 2. Plot each target point, colored by its coverage status
-    for i, target_pos in enumerate(targets):
-        is_covered = total_coverage_prob_vectorized(sensors, target_pos, sensor_radius) > 0
-        color = 'green' if is_covered else 'red'
-        label = 'Covered Target' if is_covered and 'Covered Target' not in ax.get_legend_handles_labels()[1] else \
-                'Uncovered Target' if not is_covered and 'Uncovered Target' not in ax.get_legend_handles_labels()[1] else ""
-        ax.plot(target_pos[0], target_pos[1], 'o', color=color, markersize=3, label=label)
+    # for i, target_pos in enumerate(targets):
+    #     target_pos_2d = np.array([target_pos])
+    #     is_covered = total_coverage_prob_vectorized(sensors, target_pos_2d, sensor_radius) > 0
+    #     color = 'green' if is_covered else 'red'
+    #     label = 'Covered Target' if is_covered and 'Covered Target' not in ax.get_legend_handles_labels()[1] else \
+    #             'Uncovered Target' if not is_covered and 'Uncovered Target' not in ax.get_legend_handles_labels()[1] else ""
+    #     ax.plot(target_pos[0], target_pos[1], 'o', color=color, markersize=3, label=label)
 
     # 3. Set up the plot aesthetics
     ax.set_title('Wireless Sensor Network Coverage Visualization', fontsize=16)

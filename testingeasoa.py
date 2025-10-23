@@ -48,4 +48,4 @@ total_value_coverage = total_coverage(coverage, len(random_targets))
 print(f"Total Network Coverage with Optimized Positions: {total_value_coverage:.6f}")
 
 # Generate the visualization
-visualize_network(optimized_sensor_positions, random_targets, sensing_radius)
+# visualize_network(optimized_sensor_positions, random_targets, sensing_radius)

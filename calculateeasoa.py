@@ -18,7 +18,7 @@ def total_coverage_prob_vectorized(sensors, targets, sensor_radius):
     product_failure = np.prod(failure_prob, axis=0)
     # print("Product failure probabilities: ", product_failure)
     total_prob = 1 - product_failure
-    print("Total coverage probabilities calculated ", sum(total_prob))
+    # print("Total coverage probabilities calculated ", sum(total_prob))
     return total_prob
 
 # def total_coverage_prob(sensors, point, sensor_radius):
