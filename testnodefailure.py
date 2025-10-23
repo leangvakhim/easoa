@@ -5,16 +5,13 @@ import time
 from tqdm import tqdm
 from plotingeasosa import visualize_network
 # Make sure to import the new vectorized function!
-from calculateeasoa import total_coverage_prob_vectorized, total_coverage, total_coverage_prob
+from calculateeasoa import total_coverage_prob_vectorized, total_coverage
 from easoa import easoa
 from multiprocessing import Pool
 
 # Make sure the fitness_value in calculateeasoa.py is updated!
 
 def run_failure_simulation(failure_rate):
-    """
-    Runs a single node failure simulation for a given failure rate.
-    """
     print(f"\n--- Running Simulation for {failure_rate*100}% Node Failure ---")
 
     # --- Initial Setup ---
@@ -26,8 +23,8 @@ def run_failure_simulation(failure_rate):
     MaxIter = 500
     PopSize = 50
     sensing_radius = 10.0
-    w1 = 0.7
-    w2 = 0.3
+    w1 = 0.8
+    w2 = 0.2
     w3 = 0.0
     grid_size = 5 # For dvar calculation
 

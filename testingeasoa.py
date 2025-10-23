@@ -5,7 +5,7 @@ from tqdm import tqdm
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import pdist
 from plotingeasosa import visualize_network
-from calculateeasoa import total_coverage_prob, total_coverage, total_coverage_prob_vectorized
+from calculateeasoa import total_coverage, total_coverage_prob_vectorized
 from easoa import easoa
 
 random.seed(123)
@@ -16,7 +16,7 @@ D = 50
 # MaxIter: Maximum number of iterations
 MaxIter = 500
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
-w1, w2, w3 = 0.7, 0.3, 0.0
+w1, w2, w3 = 0.9, 0.1, 0.0
 # PopSize: Population size
 PopSize = 50
 # sensing_radius: Sensing radius of each sensor
