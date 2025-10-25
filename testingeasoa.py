@@ -16,7 +16,7 @@ D = 50
 # MaxIter: Maximum number of iterations
 MaxIter = 500
 # w1,w2,w3: Weights for coverage, uniformity, and energy consumption in fitness function
-w1, w2, w3 = 0.9, 0.1, 0.0
+w1, w2, w3 = 0.8, 0.1, 0.1
 # PopSize: Population size
 PopSize = 50
 # sensing_radius: Sensing radius of each sensor

@@ -24,8 +24,8 @@ def run_failure_simulation(failure_rate):
     PopSize = 50
     sensing_radius = 10.0
     w1 = 0.8
-    w2 = 0.2
-    w3 = 0.0
+    w2 = 0.1
+    w3 = 0.1
     grid_size = 5 # For dvar calculation
 
     # --- FIX 2: Correct Monitoring Points (as NumPy array) ---
@@ -44,7 +44,7 @@ def run_failure_simulation(failure_rate):
         max_dvar_approx = 1
 
     # --- 1. Initial Optimization (to get a good, uniform deployment) ---
-    print(f"Running initial EASOA optimization (w1={w1}, w2={w2})...")
+    print(f"Running initial EASOA optimization (w1={w1}, w2={w2}) , w3={w3})")
     start_time = time.time()
     # --- Pass new args ---
     optimized_sensor_positions = easoa(N, D, MaxIter, PopSize, sensing_radius, w1, w2, w3, random_targets_np, max_dvar_approx)

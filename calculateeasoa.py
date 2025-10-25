@@ -70,7 +70,7 @@ def dynamic_warning_update(x, x_best, delta=0.3):
     return x_new
 
 def fitness_value(sparrow, w1, w2, w3, sensing_radius, deployment_area, random_targets_np, max_dvar_approx):
-    energy = 0
+    energy = 100
     all_coverage_probs = total_coverage_prob_vectorized(sparrow, random_targets_np, sensing_radius)
     coverage = np.mean(all_coverage_probs)
 
